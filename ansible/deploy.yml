@@ -1,0 +1,34 @@
+---
+- name: Deploy Yii2 application
+  hosts: swarm
+  become: yes
+  vars:
+    dockerhub_username: "syed855"
+    dockerhub_password: "dubai@syed"  # Replace with your actual password or use Ansible Vault
+    image_name: "syed855/yii2-app:latest"
+    service_name: "yii2-app"
+
+  tasks:
+    - name: Login to Docker Hub
+      community.docker.docker_login:
+        username: "{{ dockerhub_username }}"
+        password: "{{ dockerhub_password }}"
+
+    - name: Deploy or update service
+      community.docker.docker_stack:
+        name: "{{ service_name }}"
+        state: present
+        compose:
+          - version: '3.8'
+            services:
+              app:
+                image: "{{ image_name }}"
+                ports:
+                  - "8000:80"
+                deploy:
+                  replicas: 1
+                  update_config:
+                    parallelism: 1
+                    delay: 10s
+                  restart_policy:
+                    condition: on-failure
