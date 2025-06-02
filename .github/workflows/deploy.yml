@@ -15,7 +15,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}  # Make sure this token has write/push scopes
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
@@ -31,7 +31,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Optional: AWS CLI setup if you're using AWS for deployment, otherwise remove this step
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -42,14 +41,17 @@ jobs:
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
 
-      - name: Add SSH key
+      - name: Add SSH key and known hosts
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
+      - name: Test SSH connection to server
+        run: ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@52.66.239.177 'echo SSH connection successful'
+
       - name: Run Ansible playbook
         run: |
           cd ansible
-          ansible-playbook -i inventory.ini deploy.yml \
+          ansible-playbook -i inventory.ini deploy.yml --private-key ~/.ssh/id_rsa \
             --extra-vars "dockerhub_username=${{ secrets.DOCKER_HUB_USERNAME }} dockerhub_password=${{ secrets.DOCKER_HUB_TOKEN }}"
