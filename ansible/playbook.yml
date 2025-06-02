@@ -25,6 +25,11 @@
         - nginx
         - python3-pip
 
+    - name: Install jsondiff Python package
+      pip:
+        name: jsondiff
+        executable: pip3
+
     - name: Add Docker GPG key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
