@@ -46,11 +46,12 @@ RUN mkdir -p /var/www/html/runtime /var/www/html/web/assets \
     && chown -R www-data:www-data /var/www/html/runtime /var/www/html/web/assets \
     && chmod -R 775 /var/www/html/runtime /var/www/html/web/assets
 
-# Set environment variable to production mode for Yii2
+# Set environment variables for production mode
 ENV YII_ENV=prod
+ENV YII_DEBUG=false
 
 # Expose port 80 for HTTP traffic
 EXPOSE 80
 
-# Start Apache in the foreground (default command)
+# Start Apache in the foreground
 CMD ["apache2-foreground"]
