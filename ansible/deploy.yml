@@ -2,9 +2,10 @@
 - name: Deploy Yii2 application
   hosts: swarm
   become: yes
+
   vars:
     dockerhub_username: "syed855"
-    dockerhub_password: "dubai@syed"  # Replace with your actual password or use Ansible Vault
+    dockerhub_password: "dubai@syed"  # Ideally use Ansible Vault for secrets
     image_name: "syed855/yii2-app:latest"
     service_name: "yii2-app"
 
