@@ -38,6 +38,12 @@
         virtualenv: "{{ python_venv_path }}"
         virtualenv_command: python3 -m venv
 
+    - name: Install requests Python package in virtualenv  # <--- Added this task
+      pip:
+        name: requests
+        virtualenv: "{{ python_venv_path }}"
+        virtualenv_command: python3 -m venv
+
     - name: Add Docker GPG key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
