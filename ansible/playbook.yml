@@ -9,6 +9,7 @@
     domain_name: "52.66.239.177"
     python_venv_path: /opt/venv
     app_path: /opt/yii2-app
+    ansible_python_interpreter: /opt/venv/bin/python
 
   tasks:
     - name: Update apt package index
@@ -33,12 +34,16 @@
       args:
         creates: "{{ python_venv_path }}/bin/activate"
 
-    - name: Install required python packages globally
+    - name: Upgrade pip inside virtualenv
+      command: "{{ python_venv_path }}/bin/pip install --upgrade pip"
+
+    - name: Install required python packages in virtualenv
       pip:
         name:
           - jsondiff
           - requests
-        executable: pip3
+        virtualenv: "{{ python_venv_path }}"
+        virtualenv_python: python3
 
     - name: Add Docker GPG key
       apt_key:
