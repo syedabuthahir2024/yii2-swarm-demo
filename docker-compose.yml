@@ -1,15 +1,9 @@
-version: '3.8'
+version: '2'
 services:
   php:
-    image: syed855/my-yii2-php:8.2
+    image: yiisoftware/yii2-php:8.2-apache
     volumes:
-      - C:/Users/HP/.composer-docker/cache:/root/.composer/cache:delegated
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
     ports:
-      - "8000:80"
-    networks:
-      - default
-
-networks:
-  default:
-    driver: overlay
+      - '8000:80'
