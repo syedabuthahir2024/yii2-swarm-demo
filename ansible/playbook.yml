@@ -1,7 +1,8 @@
 ---
-- name: Configure Docker Swarm host
+- name: Configure Docker Swarm host and deploy Yii2 app
   hosts: swarm
   become: yes
+
   vars:
     docker_compose_version: "v2.20.2"
     repo_url: "https://github.com/syedabuthahir2024/yii2-swarm-demo.git"
@@ -94,23 +95,20 @@
         dest: "{{ app_path }}"
         update: yes
 
-    ##############################################
-    # 🚀 Docker Stack Deployment for Yii2 App
-    ##############################################
-
     - name: Deploy Yii2 app using docker stack
-      shell: docker stack deploy -c docker-compose.yml yii2
-      args:
-        chdir: "{{ app_path }}"
+      shell: docker stack deploy -c {{ app_path }}/docker-compose.yml yii2
       register: stack_result
+      retries: 3
+      delay: 5
+      until: stack_result.rc == 0
 
-    - name: Print deployment status
+    - name: Print deployment stdout
       debug:
-        msg: "{{ stack_result.stdout_lines }}"
+        var: stack_result.stdout_lines
 
-    ##############################################
-    # 🌐 NGINX Configuration
-    ##############################################
+    - name: Print deployment stderr
+      debug:
+        var: stack_result.stderr_lines
 
     - name: Configure NGINX site
       template:
