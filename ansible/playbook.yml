@@ -37,7 +37,6 @@
         name: jsondiff
         virtualenv: "{{ python_venv_path }}"
         virtualenv_command: python3 -m venv
-        executable: "{{ python_venv_path }}/bin/pip"
 
     - name: Add Docker GPG key
       apt_key:
