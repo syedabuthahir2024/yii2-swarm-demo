@@ -9,7 +9,6 @@
     domain_name: "52.66.239.177"
     python_venv_path: /opt/venv
     app_path: /opt/yii2-app
-    ansible_python_interpreter: /opt/venv/bin/python
 
   tasks:
     - name: Update apt package index
@@ -34,16 +33,12 @@
       args:
         creates: "{{ python_venv_path }}/bin/activate"
 
-    - name: Upgrade pip inside virtualenv
-      command: "{{ python_venv_path }}/bin/pip install --upgrade pip"
-
-    - name: Install required python packages in virtualenv
+    - name: Install required python packages globally
       pip:
         name:
           - jsondiff
           - requests
-        virtualenv: "{{ python_venv_path }}"
-        virtualenv_python: python3
+        executable: pip3
 
     - name: Add Docker GPG key
       apt_key:
@@ -96,6 +91,14 @@
         repo: "{{ repo_url }}"
         dest: "{{ app_path }}"
         update: yes
+
+    # Install jsondiff & requests before deploy to fix your error
+    - name: Install python packages needed for deployment
+      pip:
+        name:
+          - jsondiff
+          - requests
+        executable: pip3
 
     - name: Deploy Yii2 app using docker stack
       shell: docker stack deploy -c {{ app_path }}/docker-compose.yml yii2
