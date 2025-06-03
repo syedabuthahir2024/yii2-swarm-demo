@@ -5,7 +5,7 @@
 
   vars:
     dockerhub_username: "syed855"
-    dockerhub_password: "dubai@syed"  # Ideally use Ansible Vault for secrets
+    dockerhub_password: "dubai@syed"
     image_name: "syed855/yii2-app:latest"
     service_name: "yii2-app"
 
@@ -39,7 +39,7 @@
               app:
                 image: "{{ image_name }}"
                 ports:
-                  - "8000:80"
+                  - "8080:80"  # Changed port to avoid conflict
                 deploy:
                   replicas: 1
                   update_config:
