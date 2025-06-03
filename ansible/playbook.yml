@@ -1,12 +1,14 @@
 ---
-- name: Configure Docker Swarm host
+- name: Configure Docker Swarm host and deploy Yii2 app
   hosts: swarm
   become: yes
+
   vars:
     docker_compose_version: "v2.20.2"
     repo_url: "https://github.com/syedabuthahir2024/yii2-swarm-demo.git"
-    domain_name: "52.66.239.177"  # or your EC2 public IP
+    domain_name: "52.66.239.177"  # your EC2 public IP or domain
     python_venv_path: /opt/venv
+    app_path: /opt/yii2-app
 
   tasks:
     - name: Update apt package index
@@ -15,32 +17,27 @@
 
     - name: Install prerequisites
       apt:
-        name: "{{ item }}"
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - git
+          - nginx
+          - python3-pip
+          - python3-venv
         state: present
-      loop:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - software-properties-common
-        - git
-        - nginx
-        - python3-pip
-        - python3-venv
 
     - name: Create Python virtual environment
       command: python3 -m venv {{ python_venv_path }}
       args:
         creates: "{{ python_venv_path }}/bin/activate"
 
-    - name: Install jsondiff Python package in virtualenv
+    - name: Install required Python packages in virtualenv
       pip:
-        name: jsondiff
-        virtualenv: "{{ python_venv_path }}"
-        virtualenv_command: python3 -m venv
-
-    - name: Install requests Python package in virtualenv
-      pip:
-        name: requests
+        name:
+          - jsondiff
+          - requests
         virtualenv: "{{ python_venv_path }}"
         virtualenv_command: python3 -m venv
 
@@ -54,14 +51,13 @@
         repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
         state: present
 
-    - name: Install Docker packages
+    - name: Install Docker engine and CLI
       apt:
-        name: "{{ item }}"
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
         state: present
-      loop:
-        - docker-ce
-        - docker-ce-cli
-        - containerd.io
 
     - name: Install Docker Compose
       get_url:
@@ -87,15 +83,30 @@
 
     - name: Create directory for app
       file:
-        path: /opt/yii2-app
+        path: "{{ app_path }}"
         state: directory
         mode: '0755'
 
     - name: Clone your application repository
       git:
         repo: "{{ repo_url }}"
-        dest: /opt/yii2-app
+        dest: "{{ app_path }}"
         update: yes
+
+    - name: Deploy Yii2 app using docker stack
+      shell: docker stack deploy -c {{ app_path }}/docker-compose.yml yii2
+      register: stack_result
+      retries: 3
+      delay: 5
+      until: stack_result.rc == 0
+
+    - name: Print deployment stdout
+      debug:
+        var: stack_result.stdout_lines
+
+    - name: Print deployment stderr
+      debug:
+        var: stack_result.stderr_lines
 
     - name: Configure NGINX site
       template:
