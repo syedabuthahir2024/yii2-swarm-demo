@@ -1,3 +1,12 @@
+# version: '3.8'
+# services:
+#   php:
+#     image: syed855/my-yii2-php:8.2
+#     volumes:
+#       - C:/Users/HP/.composer-docker/cache:/root/.composer/cache:delegated
+#       - ./:/app:delegated
+#     ports:
+#       - '8000:80'
 version: '3.8'
 services:
   php:
@@ -6,4 +15,10 @@ services:
       - C:/Users/HP/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
     ports:
-      - '8000:80'
+      - "8000:80"
+    networks:
+      - default
+
+networks:
+  default:
+    driver: overlay
