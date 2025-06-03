@@ -6,7 +6,7 @@
   vars:
     docker_compose_version: "v2.20.2"
     repo_url: "https://github.com/syedabuthahir2024/yii2-swarm-demo.git"
-    domain_name: "52.66.239.177"  # your EC2 public IP or domain
+    domain_name: "52.66.239.177"
     python_venv_path: /opt/venv
     app_path: /opt/yii2-app
 
@@ -33,13 +33,12 @@
       args:
         creates: "{{ python_venv_path }}/bin/activate"
 
-    - name: Install required Python packages in virtualenv
+    - name: Install required python packages globally
       pip:
         name:
           - jsondiff
           - requests
-        virtualenv: "{{ python_venv_path }}"
-        virtualenv_command: python3 -m venv
+        executable: pip3
 
     - name: Add Docker GPG key
       apt_key:
