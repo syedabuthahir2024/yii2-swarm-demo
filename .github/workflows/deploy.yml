@@ -11,6 +11,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -18,11 +21,13 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/yii2-app:latest
+          cache-from: type=inline
+          cache-to: type=inline
 
   deploy:
     needs: build-and-push
@@ -38,13 +43,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - name: Install Ansible
-        run: sudo apt-get update && sudo apt-get install -y ansible
+      - name: Install Ansible and SSH tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible openssh-client
 
       - name: Add SSH key and known hosts
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          name: id_rsa
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
       - name: Test SSH connection to server
@@ -53,5 +61,6 @@ jobs:
       - name: Run Ansible playbook
         run: |
           cd ansible
-          ansible-playbook -i inventory.ini deploy.yml --private-key ~/.ssh/id_rsa \
+          ansible-playbook -i inventory.ini deploy.yml \
+            --private-key ~/.ssh/id_rsa \
             --extra-vars "dockerhub_username=${{ secrets.DOCKER_HUB_USERNAME }} dockerhub_password=${{ secrets.DOCKER_HUB_TOKEN }}"
