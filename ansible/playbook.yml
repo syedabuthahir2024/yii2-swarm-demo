@@ -6,6 +6,7 @@
     docker_compose_version: "v2.20.2"
     repo_url: "https://github.com/syedabuthahir2024/yii2-swarm-demo.git"
     domain_name: "52.66.239.177"  # or your EC2 public IP
+    python_venv_path: /opt/venv
 
   tasks:
     - name: Update apt package index
@@ -24,11 +25,19 @@
         - git
         - nginx
         - python3-pip
+        - python3-venv
 
-    - name: Install jsondiff Python package
+    - name: Create Python virtual environment
+      command: python3 -m venv {{ python_venv_path }}
+      args:
+        creates: "{{ python_venv_path }}/bin/activate"
+
+    - name: Install jsondiff Python package in virtualenv
       pip:
         name: jsondiff
-        executable: pip3
+        virtualenv: "{{ python_venv_path }}"
+        virtualenv_command: python3 -m venv
+        executable: "{{ python_venv_path }}/bin/pip"
 
     - name: Add Docker GPG key
       apt_key:
@@ -40,7 +49,7 @@
         repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
         state: present
 
-    - name: Install Docker
+    - name: Install Docker packages
       apt:
         name: "{{ item }}"
         state: present
