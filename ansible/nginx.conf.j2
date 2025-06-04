@@ -10,6 +10,11 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
+    location /prometheus/ {
+        proxy_pass http://127.0.0.1:9090/;
+        proxy_set_header Host $host;
+    }
+
     access_log /var/log/nginx/yii2-app-access.log;
     error_log /var/log/nginx/yii2-app-error.log;
 }
