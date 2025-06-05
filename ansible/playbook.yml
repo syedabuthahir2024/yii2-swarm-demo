@@ -1,4 +1,4 @@
----
+# ---
 - name: Configure Docker Swarm host and deploy Yii2 app
   hosts: swarm
   become: yes
@@ -11,11 +11,23 @@
     app_path: /opt/yii2-app
 
   tasks:
+    # --- Fix Docker GPG issue ---
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker APT repository
+      apt_repository:
+        repo: deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker.gpg] https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+
     - name: Update apt package index
       apt:
         update_cache: yes
 
-    - name: Install prerequisites
+    # --- Install all required packages including pip ---
+    - name: Install prerequisites with retries
       apt:
         name:
           - apt-transport-https
@@ -27,6 +39,11 @@
           - python3-pip
           - python3-venv
         state: present
+        update_cache: yes
+      retries: 3
+      delay: 5
+      register: apt_result
+      until: apt_result is succeeded
 
     - name: Create Python virtual environment
       command: python3 -m venv {{ python_venv_path }}
@@ -39,16 +56,6 @@
           - jsondiff
           - requests
         executable: pip3
-
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-
-    - name: Add Docker repository
-      apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
-        state: present
 
     - name: Install Docker engine and CLI
       apt:
@@ -134,7 +141,7 @@
         path: /etc/nginx/sites-enabled/default
         state: absent
 
-    # Prometheus Node Exporter setup tasks added below
+    # --- Prometheus Node Exporter setup ---
 
     - name: Create directory for Prometheus
       file:
